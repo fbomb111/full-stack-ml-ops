@@ -1,0 +1,9 @@
+# application dependencies
+click
+kaggle
+Sphinx
+coverage
+flake8
+python-dotenv
+sagemaker
+awscli
