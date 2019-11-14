@@ -15,8 +15,15 @@ import signal
 import traceback
 import flask
 import pandas as pd
-from application import app
-from src.models import predict_model
+# from application import app
+# import app
+from models import predict_model
+
+# from flask import Flask
+
+app = flask.Flask(__name__)
+
+# from application import predictor
 
 model_path = os.path.join('output', 'models')
 
@@ -107,7 +114,7 @@ def transformation():
     # # predictions = ScoringService.predict(data)
 
     os.chdir('/opt/program')
-    predictions = predict_model.main(s)
+    predictions = predict_model.predictFromCSV(s)
 
     # Convert from numpy back to CSV
     out = StringIO()

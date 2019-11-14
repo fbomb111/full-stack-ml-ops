@@ -16,15 +16,9 @@ DOCKER_IMAGE_NAME = $(PROJECT_NAME)
 DOCKER_IMAGE_NAME_IS_VALID := $(shell [[ $(DOCKER_IMAGE_NAME) =~ ^[a-zA-Z0-9](-*[a-zA-Z0-9])*$$ ]] && echo TRUE || echo FALSE)
 DOCKER_IMAGE_EXISTS := $(shell docker images -q $(DOCKER_IMAGE_NAME))
 
-# S3 buckets
-# S3_BUCKET = sagemaker-us-east-2-117588387775
-# S3_BUCKET_PREFIX = arn:aws:s3:::$(S3_BUCKET)
-
-# IAM Role with sagemaker permissions
-# IAM_ROLE = arn:aws:iam::117588387775:role/service-role/AmazonSageMaker-ExecutionRole-20190513T204887
-
-# AWS profile
-# PROFILE = default
+# This should be passed in with the command line argument for predict and predict_local
+METHOD=csv
+TEST_FILE=data/test/mnist_sample.csv 
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -81,7 +75,8 @@ environment:
 ifeq (True,$(HAS_CONDA))
 	@echo ">>> Detected conda, creating conda environment."
 ifeq (3,$(findstring 3,$(PYTHON_INTERPRETER)))
-	conda create --name $(PROJECT_NAME) python=3 pip
+	# As of now, higher versions of python don't support tensorflow
+	conda create --name $(PROJECT_NAME) python=3.7 pip 
 else
 	conda create --name $(PROJECT_NAME) python=2.7 pip
 endif
@@ -108,9 +103,7 @@ features: container/data/external/train.csv container/data/external/test.csv req
 train: container/data/processed/X_train.npy container/data/processed/y_train.npy requirements
 	cd container; $(PYTHON_INTERPRETER) src/models/build_model.py
 
-# This should be passed in with the command line argument
-METHOD=csv
-TEST_FILE=data/test/mnist_sample.csv 
+# example: make predict METHOD=csv TEST_FILE=data/test/mnist_sample.csv
 predict: #container/output/models/model.h5 container/data/external/test.csv requirements
 	cd container; $(PYTHON_INTERPRETER) src/models/predict_model.py $(METHOD) $(TEST_FILE) 
 
@@ -162,8 +155,9 @@ endif
 serve_local:
 	cd container; local_test/serve_local.sh $(DOCKER_IMAGE_NAME)
 
+# example: make predict_local TEST_FILE=data/test/mnist_sample.csv
 predict_local:
-	cd container; local_test/predict_local.sh data/test/mnist_sample.csv
+	cd container; local_test/predict_local.sh $(TEST_FILE)
 
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)

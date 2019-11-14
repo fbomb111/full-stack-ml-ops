@@ -13,8 +13,8 @@ fi
 
 # expose the train and serve functions
 
-chmod +x container/application/train
-chmod +x container/application/serve
+chmod +x container/src/train
+chmod +x container/src/serve
 
 # Build the docker image locally with the image name 
 

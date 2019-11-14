@@ -2,4 +2,4 @@
 
 image=$1
 
-docker run --rm ${image} application/train
+docker run --rm ${image} src/train

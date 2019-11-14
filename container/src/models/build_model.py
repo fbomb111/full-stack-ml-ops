@@ -30,7 +30,7 @@ def main():
     y_train = np.load(os.path.join(data_path, 'y_train.npy'))
 
     model.fit(X_train, y_train,
-            epochs=2,
+            epochs=1,
             batch_size=128,
             verbose=True)
 

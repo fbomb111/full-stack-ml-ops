@@ -13,11 +13,6 @@ output_path = 'output'
 model_path = os.path.join(output_path, 'models')
 
 def predictFromImage(image):
-
-    # temporary workaround
-    tb._SYMBOLIC_SCOPE.value = True
-    ###
-
     if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
         os.chdir('container')
 
@@ -38,6 +33,11 @@ def predictAndOutputKaggleSubmission(csv):
     result.to_csv(os.path.join(output_path, 'submission.csv'), index=False)
 
 def predict(input):
+
+    # temporary workaround
+    tb._SYMBOLIC_SCOPE.value = True
+    ###
+
     X_test = reshapeAndNormalizeXValues(input)
     model = keras.models.load_model(os.path.join(model_path, 'model.h5'))
     y_test = model.predict(X_test)
