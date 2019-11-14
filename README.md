@@ -90,7 +90,7 @@ To containerize your model project run `make build_container`
 ### Locally Testing the Container
 
 1. First, test that your container can train by running `make train_local`
-2. Second, serve the container locally run `make serve_local`
+2. Second, to serve the container locally run `make serve_local`
 3. Last, make an inference to the container by running `make predict_local`
 
 

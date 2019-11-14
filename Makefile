@@ -1,4 +1,6 @@
 
+include .env
+
 .PHONY: clean data lint requirements sync_to_s3 sync_from_s3
 
 #################################################################################
@@ -6,7 +8,7 @@
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-PROJECT_NAME = sagemaker-byo-mnist
+# PROJECT_NAME = ${PROJECT_NAME}
 PYTHON_INTERPRETER = python3
 
 # name that docker will use for creating the image which will also be uploaded to AWS ECR
@@ -15,14 +17,14 @@ DOCKER_IMAGE_NAME_IS_VALID := $(shell [[ $(DOCKER_IMAGE_NAME) =~ ^[a-zA-Z0-9](-*
 DOCKER_IMAGE_EXISTS := $(shell docker images -q $(DOCKER_IMAGE_NAME))
 
 # S3 buckets
-S3_BUCKET = sagemaker-us-east-2-117588387775
-S3_BUCKET_PREFIX = arn:aws:s3:::$(S3_BUCKET)
+# S3_BUCKET = sagemaker-us-east-2-117588387775
+# S3_BUCKET_PREFIX = arn:aws:s3:::$(S3_BUCKET)
 
 # IAM Role with sagemaker permissions
-IAM_ROLE = arn:aws:iam::117588387775:role/service-role/AmazonSageMaker-ExecutionRole-20190513T204887
+# IAM_ROLE = arn:aws:iam::117588387775:role/service-role/AmazonSageMaker-ExecutionRole-20190513T204887
 
 # AWS profile
-PROFILE = default
+# PROFILE = default
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -106,8 +108,11 @@ features: container/data/external/train.csv container/data/external/test.csv req
 train: container/data/processed/X_train.npy container/data/processed/y_train.npy requirements
 	cd container; $(PYTHON_INTERPRETER) src/models/build_model.py
 
-predict: container/output/models/model.h5 container/data/external/test.csv requirements
-	cd container; $(PYTHON_INTERPRETER) src/models/predict_model.py data/test/mnist_sample.csv
+# This should be passed in with the command line argument
+METHOD=csv
+TEST_FILE=data/test/mnist_sample.csv 
+predict: #container/output/models/model.h5 container/data/external/test.csv requirements
+	cd container; $(PYTHON_INTERPRETER) src/models/predict_model.py $(METHOD) $(TEST_FILE) 
 
 submit: ~/.kaggle/kaggle.json container/data/processed/submission.csv
 	kaggle competitions submit digit-recognizer -f container/output/submission.csv -m "Automated submission"
@@ -118,7 +123,7 @@ grade: container/data/processed/submission.csv
 	$(PYTHON_INTERPRETER) test/test_project.py
 
 ~/.kaggle/kaggle.json:
-	@echo "Configuration error.  Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-api#api-credentials"; exit 1;
+	@echo "Configuration error. Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-api#api-credentials"; exit 1;
 
 container/data/external/train.csv: ~/.kaggle/kaggle.json
 	kaggle competitions download -c digit-recognizer -f train.csv -p container/data/external --force
@@ -142,14 +147,14 @@ container/data/processed/y_test.npy: features
 # DEPLOYMENT COMMANDS                                                           #
 #################################################################################
 
-build_and_push:
-	bash scripts/build_and_push.sh $(DOCKER_IMAGE_NAME)
+build_container:
+	bash scripts/build_container.sh $(DOCKER_IMAGE_NAME)
 
 train_local: 
 ifeq ($(DOCKER_IMAGE_NAME_IS_VALID),)
 	@echo "Image name * $(DOCKER_IMAGE_NAME) * failed to satisfy constraint: Member must satisfy regular expression pattern: ^[a-zA-Z0-9](-*[a-zA-Z0-9])*"
 else ifeq ($(DOCKER_IMAGE_EXISTS),)
-	@echo "Image name * $(DOCKER_IMAGE_NAME) * not found.  Run 'make build_and_push' to create the image and push to ECR"
+	@echo "Image name * $(DOCKER_IMAGE_NAME) * not found.  Run 'make build_container' to create the image"
 else
 	cd container; local_test/train_local.sh $(DOCKER_IMAGE_NAME)
 endif
@@ -159,6 +164,9 @@ serve_local:
 
 predict_local:
 	cd container; local_test/predict_local.sh data/test/mnist_sample.csv
+
+push_container:
+	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
 
 deploy_endpoint:
 	$(PYTHON_INTERPRETER) scripts/deploy_endpoint.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET_PREFIX) $(IAM_ROLE)

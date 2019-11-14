@@ -13,9 +13,6 @@ then
     exit 1
 fi
 
-chmod +x container/application/train
-chmod +x container/application/serve
-
 # Get the account number associated with the current IAM credentials
 account=$(aws sts get-caller-identity --query Account --output text)
 
@@ -23,7 +20,6 @@ if [ $? -ne 0 ]
 then
     exit 255
 fi
-
 
 # Get the region defined in the current configuration (default to us-west-2 if none defined)
 region=$(aws configure get region)
@@ -44,10 +40,7 @@ fi
 # Get the login command from ECR and execute it directly
 $(aws ecr get-login --region ${region} --no-include-email)
 
-# Build the docker image locally with the image name and then push it to ECR
-# with the full name.
+# Tag the already built docker image and then push it to ECR with the full name.
 
-docker build  -t ${image} .
 docker tag ${image} ${fullname}
-
-# docker push ${fullname}
+docker push ${fullname}

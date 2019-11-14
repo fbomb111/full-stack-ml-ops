@@ -1,13 +1,9 @@
 # project dependencies
--e .
 pandas
 numpy
 keras
 tensorflow
 pillow
-# re
-# os
-base64
 
 # application dependencies
 flask 
