@@ -17,7 +17,7 @@ import flask
 import pandas as pd
 # from application import app
 # import app
-from models import predict_model
+from src.models import predict_model
 
 # from flask import Flask
 

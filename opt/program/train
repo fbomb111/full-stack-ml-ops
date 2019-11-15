@@ -11,19 +11,8 @@ import pickle
 import traceback
 import sys
 import pandas as pd
-from features import build_features
-from models import build_model
-
-# sys.path.insert(0, 'src/models/train_model.py')
-
-# These are the paths to where SageMaker mounts interesting things in your container.
-
-# prefix = '/opt/ml/'
-# prefix = 'container'
-# data_path = os.path.join(prefix, 'data')
-# output_path = os.path.join(prefix, 'output')
-# model_path = os.path.join(output_path, 'models')
-# param_path = os.path.join(prefix, 'config/hyperparameters.json')
+from src.features import build_features
+from src.models import build_model
 
 data_path = 'data'
 output_path = 'output'
@@ -39,9 +28,6 @@ training_path = os.path.join(data_path, channel_name)
 def train():
 
     print(os.getcwd())
-    # if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
-    #     os.chdir('container')
-
     print('Starting the training.')
     try:
         # Read in any hyperparameters that the user passed with the training job

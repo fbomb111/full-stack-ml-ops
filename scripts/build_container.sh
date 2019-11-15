@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 # This script shows how to build the Docker image.
-# The argument to this script is the image name. This will be used as the image on the local
-# machine.
+# The argument to this script is the image name. This will be used as the image on the local machine.
 image=$1
 
 if [ "$image" == "" ]
@@ -13,8 +12,8 @@ fi
 
 # expose the train and serve functions
 
-chmod +x opt/program/src/train
-chmod +x opt/program/src/serve
+chmod +x opt/program/train
+chmod +x opt/program/serve
 
 # Build the docker image locally with the image name 
 
