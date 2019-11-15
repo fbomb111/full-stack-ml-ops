@@ -8,8 +8,8 @@ include .env
 #################################################################################
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-# PROJECT_NAME = ${PROJECT_NAME}
 PYTHON_INTERPRETER = python3
+S3_BUCKET_PREFIX = $(S3_BUCKET)
 
 # name that docker will use for creating the image which will also be uploaded to AWS ECR
 DOCKER_IMAGE_NAME = $(PROJECT_NAME)
@@ -43,12 +43,18 @@ requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -r container/requirements.txt	
 
 ## Make Dataset
-data: container/data/external/train.csv container/data/external/test.csv
+data: opt/program/data/external/train.csv opt/program/data/external/test.csv
 
 ## Delete all compiled Python files
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
+
+# Delete all output files (data, models, kaggle csv)
+purge:
+	find opt/program/output -type f -delete
+	find opt/program/data/external -type f -delete
+	find opt/program/data/processed -type f -delete
 
 ## Lint using flake8
 lint:
@@ -57,17 +63,17 @@ lint:
 ## Upload Data to S3
 sync_to_s3:
 ifeq (default,$(PROFILE))
-	aws s3 sync container/data/ s3://$(S3_BUCKET)/data/
+	aws s3 sync opt/program/data/ s3://$(S3_BUCKET)/data/
 else
-	aws s3 sync container/data/ s3://$(S3_BUCKET)/data/ --profile $(PROFILE)
+	aws s3 sync opt/program/data/ s3://$(S3_BUCKET)/data/ --profile $(PROFILE)
 endif
 
 ## Download Data from S3
 sync_from_s3:
 ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(S3_BUCKET)/data/ container/data/
+	aws s3 sync s3://$(S3_BUCKET)/data/ opt/program/data/
 else
-	aws s3 sync s3://$(S3_BUCKET)/data/ container/data/ --profile $(PROFILE)
+	aws s3 sync s3://$(S3_BUCKET)/data/ opt/program/data/ --profile $(PROFILE)
 endif
 
 ## Set up python interpreter environment
@@ -97,44 +103,45 @@ test_environment:
 # PROJECT RULES                                                                 #
 #################################################################################
 
-features: container/data/external/train.csv container/data/external/test.csv requirements
-	cd container; $(PYTHON_INTERPRETER) src/features/build_features.py
+features: #opt/program/data/external/train.csv opt/program/data/external/test.csv requirements
+	cd opt/program; $(PYTHON_INTERPRETER) src/features/build_features.py
 
-train: container/data/processed/X_train.npy container/data/processed/y_train.npy requirements
-	cd container; $(PYTHON_INTERPRETER) src/models/build_model.py
+train: #opt/program/data/processed/X_train.npy opt/program/data/processed/y_train.npy requirements
+	cd opt/program; $(PYTHON_INTERPRETER) src/train
+	# cd opt/program; $(PYTHON_INTERPRETER) src/models/build_model.py
 
 # example: make predict METHOD=csv TEST_FILE=data/test/mnist_sample.csv
-predict: #container/output/models/model.h5 container/data/external/test.csv requirements
-	cd container; $(PYTHON_INTERPRETER) src/models/predict_model.py $(METHOD) $(TEST_FILE) 
+predict: #opt/program/output/models/model.h5 opt/program/data/external/test.csv requirements
+	cd opt/program; $(PYTHON_INTERPRETER) src/models/predict_model.py $(METHOD) $(TEST_FILE); exit 0 
 
-submit: ~/.kaggle/kaggle.json container/data/processed/submission.csv
-	kaggle competitions submit digit-recognizer -f container/output/submission.csv -m "Automated submission"
+submit: ~/.kaggle/kaggle.json opt/program/data/processed/submission.csv
+	kaggle competitions submit digit-recognizer -f opt/program/output/submission.csv -m "Automated submission"
 	echo "All submissions:"
 	kaggle competitions submissions digit-recognizer
 
-grade: container/data/processed/submission.csv
+grade: opt/program/data/processed/submission.csv
 	$(PYTHON_INTERPRETER) test/test_project.py
 
 ~/.kaggle/kaggle.json:
 	@echo "Configuration error. Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-api#api-credentials"; exit 1;
 
-container/data/external/train.csv: ~/.kaggle/kaggle.json
-	kaggle competitions download -c digit-recognizer -f train.csv -p container/data/external --force
+opt/program/data/external/train.csv: ~/.kaggle/kaggle.json
+	kaggle competitions download -c digit-recognizer -f train.csv -p opt/program/data/external --force
 
-container/data/external/test.csv: ~/.kaggle/kaggle.json
-	kaggle competitions download -c digit-recognizer -f test.csv -p container/data/external --force
+opt/program/data/external/test.csv: ~/.kaggle/kaggle.json
+	kaggle competitions download -c digit-recognizer -f test.csv -p opt/program/data/external --force
 
-container/output/models/model.h5: train
+opt/program/output/models/model.h5: train
 
-container/data/processed/submission.csv: predict
+opt/program/data/processed/submission.csv: predict
 
-container/data/processed/X_train.npy: features
+opt/program/data/processed/X_train.npy: features
 
-container/data/processed/X_test.npy: features
+opt/program/data/processed/X_test.npy: features
 
-container/data/processed/y_train.npy: features
+opt/program/data/processed/y_train.npy: features
 
-container/data/processed/y_test.npy: features
+opt/program/data/processed/y_test.npy: features
 
 #################################################################################
 # DEPLOYMENT COMMANDS                                                           #
@@ -149,15 +156,15 @@ ifeq ($(DOCKER_IMAGE_NAME_IS_VALID),)
 else ifeq ($(DOCKER_IMAGE_EXISTS),)
 	@echo "Image name * $(DOCKER_IMAGE_NAME) * not found.  Run 'make build_container' to create the image"
 else
-	cd container; local_test/train_local.sh $(DOCKER_IMAGE_NAME)
+	cd opt/program; local_test/train_local.sh $(DOCKER_IMAGE_NAME)
 endif
 
 serve_local:
-	cd container; local_test/serve_local.sh $(DOCKER_IMAGE_NAME)
+	cd opt/program; local_test/serve_local.sh $(DOCKER_IMAGE_NAME)
 
 # example: make predict_local TEST_FILE=data/test/mnist_sample.csv
 predict_local:
-	cd container; local_test/predict_local.sh $(TEST_FILE)
+	cd opt/program; local_test/predict_local.sh $(TEST_FILE)
 
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)

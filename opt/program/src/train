@@ -39,8 +39,8 @@ training_path = os.path.join(data_path, channel_name)
 def train():
 
     print(os.getcwd())
-    if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
-        os.chdir('container')
+    # if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
+    #     os.chdir('container')
 
     print('Starting the training.')
     try:

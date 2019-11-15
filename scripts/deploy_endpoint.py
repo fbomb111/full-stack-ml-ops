@@ -10,12 +10,14 @@ from time import gmtime, strftime
 
 def main(image_name, s3_bucket_prefix, iam_role):
 
+    print(os.getcwd())
+
     # start the sagemaker session
     sess = sage.Session()
 
     # upload training data to s3
     print('uploading data to s3...')
-    WORK_DIRECTORY = '../src/data/processed'
+    WORK_DIRECTORY = 'opt/program/data/processed'
     data_location = sess.upload_data(WORK_DIRECTORY, key_prefix=s3_bucket_prefix)
     print('upload completed')
 
@@ -38,7 +40,7 @@ def main(image_name, s3_bucket_prefix, iam_role):
     predictor = model.deploy(1, 'ml.t2.medium', serializer=csv_serializer)
 
     # grab some sample data
-    shape = pd.read_csv("../src/data/processed/iris.csv", header=None)
+    shape = pd.read_csv("opt/program/data/test/mnist_sample.csv", header=None)
     shape.drop(shape.columns[[0]],axis=1,inplace=True)
     sample = shape.sample(3)
 

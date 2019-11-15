@@ -8,7 +8,7 @@ RUN apt-get update \
   && pip3 install --upgrade pip
 
 # Set up the program in the image
-COPY container /opt/program
+COPY opt/program /opt/program
 
 # Set some environment variables. PYTHONUNBUFFERED keeps Python from buffering our standard
 # output stream, which means that logs can be delivered to the user quickly. PYTHONDONTWRITEBYTECODE

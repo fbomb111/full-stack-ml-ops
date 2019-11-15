@@ -32,7 +32,7 @@ I can be certain this works if you use `conda` and `python3`.  Though the projec
 
 Workflow project dependencies live in `requirements.txt`
 
-Dependencies to be containerized with the ML application live in `container/requirements.txt`
+Dependencies to be containerized with the ML application live in `opt/program/requirements.txt`
 
 Run `make requirements` to install them all locally into your enviroment.
 
@@ -45,39 +45,39 @@ Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-
 
 Once you've completed this run `make data`
 
-Then you'll be able to find your data at `container/data/external`
+Then you'll be able to find your data at `opt/program/data/external`
 
 
 ### Features
 
-Do any data pre processing and transformation in `container/src/features/build_features.py`
+Do any data pre processing and transformation in `opt/program/src/features/build_features.py`
 
 When you're ready, run `make features`
 
-Your output will be in `container/data/processed`
+Your output will be in `opt/program/data/processed`
 
 
 ### Local Training
 
-Build your model in `container/src/models/build_model.py`
+Build your model in `opt/program/src/models/build_model.py`
 
 Train it by running `make train`
 
-Your output will be at `container/output/models`
+Your output will be at `opt/program/output/models`
 
 
 ### Local Inference
 
-Put your inference logic in `container/src/models/predict_model.py`
+Put your inference logic in `opt/program/src/models/predict_model.py`
 
 Get your predictions by running `make predict METHOD=<method parameter> TEST_FILE=<local file location>`
 
-For example: `make predict METHOD=kaggle TEST_FILE=data/test/mnist_sample.csv`. The path will be prefixed with `container`.
+For example: `make predict METHOD=kaggle TEST_FILE=data/test/mnist_sample.csv`. The path will be prefixed with `opt/program`.
 
-You can keep your test files in `container/data/test`
+You can keep your test files in `opt/program/data/test`
 
 There are 3 methods to choose for local inference:
-- `kaggle` - will produce a csv file at `container/output/submission.csv` in kaggle submission format
+- `kaggle` - will produce a csv file at `opt/program/output/submission.csv` in kaggle submission format
 - `csv` - get multiple inferences from a csv file
 - `image` - get an inference by supplying an actual image (in progress)
 

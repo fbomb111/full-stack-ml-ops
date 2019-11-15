@@ -13,8 +13,8 @@ output_path = 'output'
 model_path = os.path.join(output_path, 'models')
 
 def predictFromImage(image):
-    if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
-        os.chdir('container')
+    # if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
+    #     os.chdir('container')
 
     return predict(csv)
 
