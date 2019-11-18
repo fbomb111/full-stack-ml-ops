@@ -9,7 +9,6 @@ include .env
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PYTHON_INTERPRETER = python3
-S3_BUCKET_PREFIX = $(S3_BUCKET)
 
 # name that docker will use for creating the image which will also be uploaded to AWS ECR
 DOCKER_IMAGE_NAME = $(PROJECT_NAME)
@@ -18,7 +17,7 @@ DOCKER_IMAGE_EXISTS := $(shell docker images -q $(DOCKER_IMAGE_NAME))
 
 # This should be passed in with the command line argument for predict and predict_local
 METHOD=csv
-TEST_FILE=data/test/mnist_sample.csv 
+TEST_FILE=opt/ml/input/data/test/mnist_sample.csv 
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -43,7 +42,7 @@ requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -r container/requirements.txt	
 
 ## Make Dataset
-data: opt/program/data/external/train.csv opt/program/data/external/test.csv
+data: opt/ml/input/data/external/train.csv opt/ml/input/data/external/test.csv
 
 ## Delete all compiled Python files
 clean:
@@ -52,9 +51,10 @@ clean:
 
 # Delete all output files (data, models, kaggle csv)
 purge:
-	find opt/program/output -type f -delete
-	find opt/program/data/external -type f -delete
-	find opt/program/data/processed -type f -delete
+	find opt/ml/output -type f -delete
+	find opt/ml/model -type f -delete
+	find opt/ml/input/data/external -type f -delete
+	find opt/ml/input/data/processed -type f -delete
 
 ## Lint using flake8
 lint:
@@ -63,17 +63,17 @@ lint:
 ## Upload Data to S3
 sync_to_s3:
 ifeq (default,$(PROFILE))
-	aws s3 sync opt/program/data/ s3://$(S3_BUCKET)/data/
+	aws s3 sync opt/ml/input/data/ s3://$(S3_BUCKET)/input/
 else
-	aws s3 sync opt/program/data/ s3://$(S3_BUCKET)/data/ --profile $(PROFILE)
+	aws s3 sync opt/ml/input/data/ s3://$(S3_BUCKET)/input/ --profile $(PROFILE)
 endif
 
 ## Download Data from S3
 sync_from_s3:
 ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(S3_BUCKET)/data/ opt/program/data/
+	aws s3 sync s3://$(S3_BUCKET)/input/ opt/ml/input/data/
 else
-	aws s3 sync s3://$(S3_BUCKET)/data/ opt/program/data/ --profile $(PROFILE)
+	aws s3 sync s3://$(S3_BUCKET)/input/ opt/ml/input/data/ --profile $(PROFILE)
 endif
 
 ## Set up python interpreter environment
@@ -103,45 +103,44 @@ test_environment:
 # PROJECT RULES                                                                 #
 #################################################################################
 
-features: #opt/program/data/external/train.csv opt/program/data/external/test.csv requirements
-	cd opt/program; $(PYTHON_INTERPRETER) src/features/build_features.py
+features: 
+	$(PYTHON_INTERPRETER) opt/program/src/features/build_features.py
 
-train: #opt/program/data/processed/X_train.npy opt/program/data/processed/y_train.npy requirements
-	cd opt/program; $(PYTHON_INTERPRETER) src/train
-	# cd opt/program; $(PYTHON_INTERPRETER) src/models/build_model.py
+train: 
+	$(PYTHON_INTERPRETER) opt/program/train
 
-# example: make predict METHOD=csv TEST_FILE=data/test/mnist_sample.csv
-predict: #opt/program/output/models/model.h5 opt/program/data/external/test.csv requirements
-	cd opt/program; $(PYTHON_INTERPRETER) src/models/predict_model.py $(METHOD) $(TEST_FILE); exit 0 
+# example: make predict METHOD=csv TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
+predict: 
+	$(PYTHON_INTERPRETER) opt/program/src/models/predict_model.py $(METHOD) $(TEST_FILE); exit 0 
 
-submit: ~/.kaggle/kaggle.json opt/program/data/processed/submission.csv
+submit: ~/.kaggle/kaggle.json opt/ml/input/data/processed/submission.csv
 	kaggle competitions submit digit-recognizer -f opt/program/output/submission.csv -m "Automated submission"
 	echo "All submissions:"
 	kaggle competitions submissions digit-recognizer
 
-grade: opt/program/data/processed/submission.csv
+grade: opt/ml/input/data/processed/submission.csv
 	$(PYTHON_INTERPRETER) test/test_project.py
 
 ~/.kaggle/kaggle.json:
 	@echo "Configuration error. Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-api#api-credentials"; exit 1;
 
-opt/program/data/external/train.csv: ~/.kaggle/kaggle.json
-	kaggle competitions download -c digit-recognizer -f train.csv -p opt/program/data/external --force
+opt/ml/input/data/external/train.csv: ~/.kaggle/kaggle.json
+	kaggle competitions download -c digit-recognizer -f train.csv -p opt/ml/input/data/external --force
 
-opt/program/data/external/test.csv: ~/.kaggle/kaggle.json
-	kaggle competitions download -c digit-recognizer -f test.csv -p opt/program/data/external --force
+opt/ml/input/data/external/test.csv: ~/.kaggle/kaggle.json
+	kaggle competitions download -c digit-recognizer -f test.csv -p opt/ml/input/data/external --force
 
-opt/program/output/models/model.h5: train
+opt/ml/model/model.h5: train
 
-opt/program/data/processed/submission.csv: predict
+opt/ml/input/data/processed/submission.csv: predict
 
-opt/program/data/processed/X_train.npy: features
+opt/ml/input/data/processed/X_train.npy: features
 
-opt/program/data/processed/X_test.npy: features
+opt/ml/input/data/processed/X_test.npy: features
 
-opt/program/data/processed/y_train.npy: features
+opt/ml/input/data/processed/y_train.npy: features
 
-opt/program/data/processed/y_test.npy: features
+opt/ml/input/data/processed/y_test.npy: features
 
 #################################################################################
 # DEPLOYMENT COMMANDS                                                           #
@@ -156,21 +155,24 @@ ifeq ($(DOCKER_IMAGE_NAME_IS_VALID),)
 else ifeq ($(DOCKER_IMAGE_EXISTS),)
 	@echo "Image name * $(DOCKER_IMAGE_NAME) * not found.  Run 'make build_container' to create the image"
 else
-	cd opt/program; local_test/train_local.sh $(DOCKER_IMAGE_NAME)
+	opt/program/local_test/train_local.sh $(DOCKER_IMAGE_NAME)
 endif
 
 serve_local:
-	cd opt/program; local_test/serve_local.sh $(DOCKER_IMAGE_NAME)
+	opt/program/local_test/serve_local.sh $(DOCKER_IMAGE_NAME)
 
-# example: make predict_local TEST_FILE=data/test/mnist_sample.csv
+# example: make predict_local TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
 predict_local:
-	cd opt/program; local_test/predict_local.sh $(TEST_FILE)
+	opt/program/local_test/predict_local.sh $(TEST_FILE)
 
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
 
+deploy_and_train:
+	$(PYTHON_INTERPRETER) scripts/deploy_and_train.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
+
 deploy_endpoint:
-	$(PYTHON_INTERPRETER) scripts/deploy_endpoint.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET_PREFIX) $(IAM_ROLE)
+	$(PYTHON_INTERPRETER) scripts/deploy_endpoint.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
 
 #################################################################################
 # Self Documenting Commands                                                     #

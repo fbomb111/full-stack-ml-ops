@@ -8,7 +8,9 @@ from keras.layers.convolutional import MaxPooling2D
 import numpy as np
 import os
 
-data_path = 'data/processed'
+prefix = '/' if "IS_CONTAINER" in os.environ else './'
+data_path = os.path.join(prefix, 'opt/ml/input/data')
+train_path = os.path.join(data_path, 'processed')
 
 def main():
     model=Sequential()
@@ -26,8 +28,8 @@ def main():
     model.add(Dense(10, activation='softmax'))
     model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
 
-    X_train = np.load(os.path.join(data_path, 'X_train.npy'))
-    y_train = np.load(os.path.join(data_path, 'y_train.npy'))
+    X_train = np.load(os.path.join(train_path, 'X_train.npy'))
+    y_train = np.load(os.path.join(train_path, 'y_train.npy'))
 
     model.fit(X_train, y_train,
             epochs=1,

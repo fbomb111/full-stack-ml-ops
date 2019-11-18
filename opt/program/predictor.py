@@ -8,24 +8,23 @@ import os, sys, re, io, base64
 from PIL import Image
 from flask import request
 
-# import json
 import pickle
 from io import StringIO
 import signal
 import traceback
 import flask
 import pandas as pd
-# from application import app
-# import app
-from src.models import predict_model
+from opt.program.src.models import predict_model
 
-# from flask import Flask
+# temporary workaround
+import keras.backend.tensorflow_backend as tb
+###
 
 app = flask.Flask(__name__)
 
-# from application import predictor
-
-model_path = os.path.join('output', 'models')
+prefix = 'opt/ml'
+output_path = os.path.join(prefix, 'output')
+model_path = os.path.join(prefix, 'model')
 
 # A singleton for holding the model. This simply loads the model and holds it.
 # It has a predict function that does a prediction based on the model and the input data.
@@ -37,8 +36,15 @@ class ScoringService(object):
     def get_model(cls):
         """Get the model object for this instance, loading it if it's not already loaded."""
         if cls.model == None:
-            with open(os.path.join(model_path, 'application-model.pkl'), 'r') as inp:
-                cls.model = pickle.load(inp)
+            # with open(os.path.join(model_path, 'application-model.pkl'), 'r') as inp:
+            #     cls.model = pickle.load(inp)
+
+            # temporary workaround
+            tb._SYMBOLIC_SCOPE.value = True
+            ###
+
+            model = keras.models.load_model(os.path.join(model_path, 'model.h5'))
+
         return cls.model
 
     @classmethod
@@ -113,7 +119,7 @@ def transformation():
     # # Do the prediction
     # # predictions = ScoringService.predict(data)
 
-    os.chdir('/opt/program')
+    # os.chdir('/opt/program')
     predictions = predict_model.predictFromCSV(s)
 
     # Convert from numpy back to CSV

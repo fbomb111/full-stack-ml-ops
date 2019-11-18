@@ -8,7 +8,7 @@ Using MNIST to build a sample full stack work flow for data science &amp; applic
 Create a `.env` file in the root directory of the project and add the following environment variables like so:
 
 ``` bash
-# Better to not use underscores
+# Better to not use underscores in the name
 export PROJECT_NAME = ml-foo
 
 # S3 bucket
@@ -45,7 +45,7 @@ Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-
 
 Once you've completed this run `make data`
 
-Then you'll be able to find your data at `opt/program/data/external`
+Then you'll be able to find your data at `opt/ml/input/data/external`
 
 
 ### Features
@@ -54,7 +54,7 @@ Do any data pre processing and transformation in `opt/program/src/features/build
 
 When you're ready, run `make features`
 
-Your output will be in `opt/program/data/processed`
+Your output will be in `opt/ml/input/data/processed`
 
 
 ### Local Training
@@ -63,18 +63,18 @@ Build your model in `opt/program/src/models/build_model.py`
 
 Train it by running `make train`
 
-Your output will be at `opt/program/output/models`
+Your output will be at `opt/ml/model`
 
 
 ### Local Inference
 
 Put your inference logic in `opt/program/src/models/predict_model.py`
 
-Get your predictions by running `make predict METHOD=<method parameter> TEST_FILE=<local file location>`
+Get your predictions by running `make predict METHOD=<method-parameter> TEST_FILE=<local-file-location>`
 
-For example: `make predict METHOD=kaggle TEST_FILE=data/test/mnist_sample.csv`. The path will be prefixed with `opt/program`.
+For example: `make predict METHOD=kaggle TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`. The path will be prefixed with `opt/program`.
 
-You can keep your test files in `opt/program/data/test`
+Optionally, you can keep your test files in `opt/ml/input/data/test`
 
 There are 3 methods to choose for local inference:
 - `kaggle` - will produce a csv file at `opt/program/output/submission.csv` in kaggle submission format
@@ -116,4 +116,48 @@ Don't forget to set your bucket name in your `.env` file
 
 Once you're all set, sync the data you prepared earlier to S3 by running `make sync_to_s3`
 
+Your data for the `external`, `processed`, and `test` channels will now appear in S3 under `<your-bucket>/input`
+
+
+### Creating the IAM Role
 *To be continued...*
+
+
+### Training the Model With Sagemaker
+
+By this point you should have:
+1) An IAM Role
+2) A S3 bucket
+3) A docker image in AWS ECR
+
+For optional advanced customization checkout the following files:
+- `opt/ml/input/config/hyperparameters.json`
+- `opt/ml/input/config/inputdataconfig.json`
+
+Create and train the model with Sagemaker by running `make deploy_and_train`
+
+When complete, you'll find your model in S3 at `<your-bucket>/output/<training-job-name>/output/model.tar.gz`
+
+
+### Deploying the Endpoint Configuration
+
+*To be continued...*
+
+
+### Deploying the Endpoint
+
+*To be continued...*
+
+
+### Using Lambda and API Gateway to Expose Your Endpoint
+
+*To be continued...*
+
+
+# Resources
+
+https://github.com/awslabs/amazon-sagemaker-examples
+
+https://sagemaker-workshop.com/custom/containers.html
+
+https://drivendata.github.io/cookiecutter-data-science/

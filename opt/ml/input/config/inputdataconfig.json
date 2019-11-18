@@ -1,0 +1,35 @@
+[
+    {
+        "ChannelName": "processed",
+        "DataSource": {
+            "S3DataSource": {
+                "S3DataType": "S3Prefix",
+                "S3DataDistributionType": "FullyReplicated"
+            }
+        },
+        "ContentType": "text/csv",
+        "CompressionType": "None"
+    },
+    {
+        "ChannelName": "external",
+        "DataSource": {
+            "S3DataSource": {
+                "S3DataType": "S3Prefix",
+                "S3DataDistributionType": "FullyReplicated"
+            }
+        },
+        "ContentType": "text/csv",
+        "CompressionType": "None"
+    },
+    {
+        "ChannelName": "test",
+        "DataSource": {
+            "S3DataSource": {
+                "S3DataType": "S3Prefix",
+                "S3DataDistributionType": "FullyReplicated"
+            }
+        },
+        "ContentType": "text/csv",
+        "CompressionType": "None"
+    }
+]

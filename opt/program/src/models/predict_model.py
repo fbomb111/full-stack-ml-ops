@@ -9,13 +9,12 @@ import os
 import keras.backend.tensorflow_backend as tb
 ###
 
-output_path = 'output'
-model_path = os.path.join(output_path, 'models')
+prefix = '/' if "IS_CONTAINER" in os.environ else './'
+prefix_path = os.path.join(prefix, 'opt/ml')
+output_path = os.path.join(prefix_path, 'output')
+model_path = os.path.join(prefix_path, 'model')
 
 def predictFromImage(image):
-    # if os.path.basename(os.path.normpath(os.getcwd())) != 'container':
-    #     os.chdir('container')
-
     return predict(csv)
 
 def predictFromCSV(csv):
@@ -27,7 +26,7 @@ def predictAndOutputKaggleSubmission(csv):
     df = pd.read_csv(csv, header=None)
     y_test = predict(df.values)
     y_pred = np.argmax(y_test, axis=1)
-    length = len(y_pred)#len(reshapeAndNormalizeXValues(csv))
+    length = len(y_pred)
     image_ids = range(1,length+1)
     result = pd.DataFrame({'ImageId': image_ids,'Label': y_pred})
     result.to_csv(os.path.join(output_path, 'submission.csv'), index=False)

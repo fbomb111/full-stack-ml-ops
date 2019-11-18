@@ -8,7 +8,7 @@ RUN apt-get update \
   && pip3 install --upgrade pip
 
 # Set up the program in the image
-COPY opt/program /opt/program
+COPY opt /opt
 
 # Set some environment variables. PYTHONUNBUFFERED keeps Python from buffering our standard
 # output stream, which means that logs can be delivered to the user quickly. PYTHONDONTWRITEBYTECODE
@@ -18,7 +18,6 @@ COPY opt/program /opt/program
 ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
 ENV PATH="/opt/program:${PATH}"
+ENV IS_CONTAINER=TRUE
 
-WORKDIR /opt/program
-
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r opt/program/requirements.txt
