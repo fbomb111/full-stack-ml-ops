@@ -168,11 +168,16 @@ predict_local:
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
 
-deploy_and_train:
-	$(PYTHON_INTERPRETER) scripts/deploy_and_train.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
-
-deploy_endpoint:
-	$(PYTHON_INTERPRETER) scripts/deploy_endpoint.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
+# pass in False if you don't want to deploy an endpoint
+# remember, deploying an endpoint costs $ even when you're not using it, so remove it if you don't need it
+# example: make train_and_deploy TRAIN_ONLY=False
+TRAIN_ONLY=True
+train_and_deploy:
+ifeq (True,$(TRAIN_ONLY))
+	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_only
+else
+	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_and_deploy
+endif
 
 #################################################################################
 # Self Documenting Commands                                                     #

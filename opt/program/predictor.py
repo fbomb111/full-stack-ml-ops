@@ -14,6 +14,7 @@ import signal
 import traceback
 import flask
 import pandas as pd
+import keras
 from opt.program.src.models import predict_model
 
 # temporary workaround
@@ -22,9 +23,11 @@ import keras.backend.tensorflow_backend as tb
 
 app = flask.Flask(__name__)
 
-prefix = 'opt/ml'
-output_path = os.path.join(prefix, 'output')
-model_path = os.path.join(prefix, 'model')
+prefix = '/' if "IS_CONTAINER" in os.environ else './'
+
+prefix_path = os.path.join(prefix, 'opt/ml/')
+output_path = os.path.join(prefix_path, 'output')
+model_path = os.path.join(prefix_path, 'model')
 
 # A singleton for holding the model. This simply loads the model and holds it.
 # It has a predict function that does a prediction based on the model and the input data.
@@ -43,8 +46,8 @@ class ScoringService(object):
             tb._SYMBOLIC_SCOPE.value = True
             ###
 
-            model = keras.models.load_model(os.path.join(model_path, 'model.h5'))
-
+            cls.model = keras.models.load_model(os.path.join(model_path, 'model.h5'))
+        
         return cls.model
 
     @classmethod
