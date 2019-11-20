@@ -14,17 +14,11 @@ export PROJECT_NAME = ml-foo
 # S3 bucket
 export S3_BUCKET = my-bucket-name
 
-# IAM Role with sagemaker permissions
-export IAM_ROLE = arn:aws:iam::XXXXXXXXXXXX:role/service-role/AmazonSageMaker-ExecutionRole-XXXXXXXXXXXXXXX
-
 # AWS profile
 export PROFILE = default
 ```
 
-Then run `make environment`.
-
-Activate your environment.
-
+Then run `make environment`.  Activate your environment.
 I can be certain this works if you use `conda` and `python3`.  Though the project supports `python2` and `pip`.
 
 
@@ -63,7 +57,7 @@ Build your model in `opt/program/src/models/build_model.py`
 
 Train it by running `make train`
 
-Your output will be at `opt/ml/model`
+Your output will be in `opt/ml/model`
 
 
 ### Local Inference
@@ -91,7 +85,7 @@ To containerize your model project run `make build_container`
 
 1. First, test that your container can train by running `make train_local`
 2. Second, to serve the container locally run `make serve_local`
-3. Last, make an inference to the container by running `make predict_local`
+3. Last, make an inference to the container by running `make predict_local TEST_FILE=<local-file-location>`
 
 
 ### Starting With the AWS CLI
@@ -120,33 +114,30 @@ Your data for the `external`, `processed`, and `test` channels will now appear i
 
 
 ### Creating the IAM Role
-*To be continued...*
+
+If you already have an IAM role ready for use with SageMaker, get the ARN of the role and add a line manually to your `.env` file like so:
+
+`export IAM_ROLE = arn:aws:iam::XXXXXXXXXXXX:role/<rest-of-your-arn>`
+
+**OR** - If you don't yet have a role you can run `make create_role`.  Your `.env` file will be updated automatically.  Your role in AWS will be given the name `<project-name>-Role`
+
+**OR** - Read the docs to get started with creating your own role here: https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html
 
 
-### Training the Model With Sagemaker
+### Training & Deploying the Model & Endpoint With Sagemaker
 
 By this point you should have:
 1) An IAM Role
 2) A S3 bucket
 3) A docker image in AWS ECR
 
-For optional advanced customization checkout the following files:
-- `opt/ml/input/config/hyperparameters.json`
-- `opt/ml/input/config/inputdataconfig.json`
+For optional advanced customization you can tune hyperparameters and input data channels at `scripts/train_and_deploy.py`
 
-Create and train the model with Sagemaker by running `make deploy_and_train`
+**Note:** Both training and deploying the endpoint cost $ unless you use free tier resources.  For training, you will only be billed to the closest second for the actual time needed to train.  However, for deploying the endpoint, you will be billed as long as the endpoint is available, even if you're not using it.  Therefore, the default below is to train only.
+
+Create and train the model with Sagemaker by running `make train_and_deploy`.  If you'd like to also deploy an endpoint, run `make train_and_deploy TRAIN_ONLY=False` instead
 
 When complete, you'll find your model in S3 at `<your-bucket>/output/<training-job-name>/output/model.tar.gz`
-
-
-### Deploying the Endpoint Configuration
-
-*To be continued...*
-
-
-### Deploying the Endpoint
-
-*To be continued...*
 
 
 ### Using Lambda and API Gateway to Expose Your Endpoint

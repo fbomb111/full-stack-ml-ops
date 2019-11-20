@@ -168,6 +168,9 @@ predict_local:
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
 
+create_role:
+	bash scripts/create_iam_role.sh $(DOCKER_IMAGE_NAME)
+
 # pass in False if you don't want to deploy an endpoint
 # remember, deploying an endpoint costs $ even when you're not using it, so remove it if you don't need it
 # example: make train_and_deploy TRAIN_ONLY=False
