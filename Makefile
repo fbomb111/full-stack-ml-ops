@@ -168,8 +168,13 @@ predict_local:
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
 
+# example: make create_bucket S3_BUCKET=awesome-bucket
+S3_BUCKET=$(PROJECT_NAME)
+create_bucket:
+	bash scripts/create_s3_bucket.sh $(S3_BUCKET) $(PROFILE)
+
 create_role:
-	bash scripts/create_iam_role.sh $(DOCKER_IMAGE_NAME)
+	bash scripts/create_iam_role.sh $(PROJECT_NAME)
 
 # pass in False if you don't want to deploy an endpoint
 # remember, deploying an endpoint costs $ even when you're not using it, so remove it if you don't need it
@@ -181,6 +186,8 @@ ifeq (True,$(TRAIN_ONLY))
 else
 	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_and_deploy
 endif
+
+walkoff_deploy: data features train build_container push_container train_and_deploy
 
 #################################################################################
 # Self Documenting Commands                                                     #

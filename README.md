@@ -104,9 +104,13 @@ After succesfully testing your container, deploy it to AWS's ECR by running `mak
 
 ### Data in the Cloud
 
-If you don't have one ready to use, do the very easy step of [creating an S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/gsg/CreatingABucket.html)
+If you already have a bucket you'd like to use with SageMaker, add the bucket name manually to you `.env` like so:
 
-Don't forget to set your bucket name in your `.env` file
+`export S3_BUCKET = my-bucket-name`
+
+**OR** If you don't have a bucket you can run `make create_bucket`.  Your `.env` file will be updated automatically.  Your bucket in S3 will be given the name `<project-name>-Bucket`.  Optionally call `make create_bucket S3_BUCKET=awesome-bucket-name` to give a name other than the project name.
+
+**OR** Read the docs to [create an S3 bucket here](https://docs.aws.amazon.com/AmazonS3/latest/gsg/CreatingABucket.html)
 
 Once you're all set, sync the data you prepared earlier to S3 by running `make sync_to_s3`
 
@@ -119,9 +123,9 @@ If you already have an IAM role ready for use with SageMaker, get the ARN of the
 
 `export IAM_ROLE = arn:aws:iam::XXXXXXXXXXXX:role/<rest-of-your-arn>`
 
-**OR** - If you don't yet have a role you can run `make create_role`.  Your `.env` file will be updated automatically.  Your role in AWS will be given the name `<project-name>-Role`
+**OR** - If you don't yet have a role you can run `make create_role`.  Your `.env` file will be updated automatically.  Your role in IAM will be given the name `<project-name>-Role`
 
-**OR** - Read the docs to get started with creating your own role here: https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html
+**OR** - Read the docs to [get started with creating your own role here:](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html)
 
 
 ### Training & Deploying the Model & Endpoint With Sagemaker
