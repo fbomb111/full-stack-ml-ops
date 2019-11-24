@@ -16,7 +16,8 @@ echo "
 # IAM Role with sagemaker permissions
 export IAM_ROLE = $role_arn" >>.env   
 
-# attach the SageMaker full access policy
+# attach the SageMaker & Lambda policies
 aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/AmazonSageMakerFullAccess --role-name ${name}-Role
+aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole --role-name ${name}-Role
 
 fi

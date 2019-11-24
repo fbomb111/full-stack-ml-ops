@@ -11,9 +11,6 @@ Create a `.env` file in the root directory of the project and add the following 
 # Better to not use underscores in the name
 export PROJECT_NAME = ml-foo
 
-# S3 bucket
-export S3_BUCKET = my-bucket-name
-
 # AWS profile
 export PROFILE = default
 ```
@@ -66,9 +63,9 @@ Put your inference logic in `opt/program/src/models/predict_model.py`
 
 Get your predictions by running `make predict METHOD=<method-parameter> TEST_FILE=<local-file-location>`
 
-For example: `make predict METHOD=kaggle TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`. The path will be prefixed with `opt/program`.
+For example: `make predict METHOD=kaggle TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`.
 
-Optionally, you can keep your test files in `opt/ml/input/data/test`
+For convenience, you can keep your test files in `opt/ml/input/data/test`
 
 There are 3 methods to choose for local inference:
 - `kaggle` - will produce a csv file at `opt/program/output/submission.csv` in kaggle submission format
@@ -88,13 +85,13 @@ To containerize your model project run `make build_container`
 3. Last, make an inference to the container by running `make predict_local TEST_FILE=<local-file-location>`
 
 
-### Starting With the AWS CLI
+### Getting Started with the AWS CLI
 
 From here we'll be working with AWS
 
 You'll need to [install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) and then [configure the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html#cli-quick-configuration)
 
-Don't forget to set your profile name in your `.env` file (or just leave your AWS profile name as 'default')
+**Note:** Don't forget to set your profile name in your `.env` file (or just leave your AWS profile name as 'default')
 
 
 ### Deploying the Container's Image
@@ -106,15 +103,15 @@ After succesfully testing your container, deploy it to AWS's ECR by running `mak
 
 If you already have a bucket you'd like to use with SageMaker, add the bucket name manually to you `.env` like so:
 
-`export S3_BUCKET = my-bucket-name`
+`export S3_BUCKET = <your-bucket-name>`
 
-**OR** If you don't have a bucket you can run `make create_bucket`.  Your `.env` file will be updated automatically.  Your bucket in S3 will be given the name `<project-name>-Bucket`.  Optionally call `make create_bucket S3_BUCKET=awesome-bucket-name` to give a name other than the project name.
+**OR** If you don't have a bucket you can run `make create_bucket`.  Your `.env` file will be updated automatically.  Your bucket in S3 will be given the name `<project-name>-Bucket`.  Optionally call `make create_bucket S3_BUCKET=<your-bucket-name>` to give a name other than the project name.
 
 **OR** Read the docs to [create an S3 bucket here](https://docs.aws.amazon.com/AmazonS3/latest/gsg/CreatingABucket.html)
 
 Once you're all set, sync the data you prepared earlier to S3 by running `make sync_to_s3`
 
-Your data for the `external`, `processed`, and `test` channels will now appear in S3 under `<your-bucket>/input`
+Your data for the `external`, `processed`, and `test` channels will now appear in S3 under `<your-bucket-name>/input`
 
 
 ### Creating the IAM Role
@@ -144,7 +141,25 @@ Create and train the model with Sagemaker by running `make train_and_deploy`.  I
 When complete, you'll find your model in S3 at `<your-bucket>/output/<training-job-name>/output/model.tar.gz`
 
 
-### Using Lambda and API Gateway to Expose Your Endpoint
+### Using Lambda to Access Your Endpoint
+
+In order to send requests to your model and get back predections we'll use AWS's Lambda service.
+
+Run `make create_lambda` to deploy a lambda function.
+
+Read more on Lambda [here in the AWS docs](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html).
+
+
+### Test Your Lambda Function
+
+To ensure your lambda function works, you can send a sample csv to lambda and get back the results.
+
+Run `make test_lambda TEST_FILE=<local-file-location>`.  For example: `make test_lambda TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`.
+
+The results of your request will be written to the file at `opt/ml/output/lambda_test.json`.
+
+
+### Using the API Gateway to Access Your Endpoint Externally
 
 *To be continued...*
 

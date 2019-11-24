@@ -161,31 +161,40 @@ endif
 serve_local:
 	opt/program/local_test/serve_local.sh $(DOCKER_IMAGE_NAME)
 
-# example: make predict_local TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
+# EXAMPLE: make predict_local TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
 predict_local:
 	opt/program/local_test/predict_local.sh $(TEST_FILE)
 
 push_container:
 	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
 
-# example: make create_bucket S3_BUCKET=awesome-bucket
-S3_BUCKET=$(PROJECT_NAME)
+# EXAMPLE: make create_bucket S3_BUCKET=sagemaker-byo-mnist
 create_bucket:
-	bash scripts/create_s3_bucket.sh $(S3_BUCKET) $(PROFILE)
+ifeq (,$(S3_BUCKET))
+	bash scripts/aws/create_s3_bucket.sh $(PROJECT_NAME) $(PROFILE)
+else
+	bash scripts/aws/create_s3_bucket.sh $(S3_BUCKET) $(PROFILE)
+endif
 
 create_role:
-	bash scripts/create_iam_role.sh $(PROJECT_NAME)
+	bash scripts/aws/create_iam_role.sh $(PROJECT_NAME)
 
-# pass in False if you don't want to deploy an endpoint
-# remember, deploying an endpoint costs $ even when you're not using it, so remove it if you don't need it
-# example: make train_and_deploy TRAIN_ONLY=False
-TRAIN_ONLY=True
+# pass TRAIN_ONLY=False if you don't want to deploy an endpoint
+# remember, deploying an endpoint costs $ even when you're not using it, so delete it if you don't need it
+# EXAMPLE: make train_and_deploy TRAIN_ONLY=False
 train_and_deploy:
-ifeq (True,$(TRAIN_ONLY))
-	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_only
-else
+ifeq (False,$(TRAIN_ONLY))
 	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_and_deploy
+else
+	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_only
 endif
+
+create_lambda:
+	bash scripts/aws/create_lambda.sh $(PROJECT_NAME) $(IAM_ROLE)
+
+#EXAMPLE: make test_lambda TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
+test_lambda:
+	bash scripts/aws/invoke_lambda.sh $(PROJECT_NAME) $(TEST_FILE)
 
 walkoff_deploy: data features train build_container push_container train_and_deploy
 

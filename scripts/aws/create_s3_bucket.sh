@@ -5,7 +5,7 @@ profile=$2
 
 region=$(aws configure get region --profile ${profile})
 
-error=$(aws s3api create-bucket --bucket ${name}-bucket --region $region --create-bucket-configuration LocationConstraint=$region)
+aws s3api create-bucket --bucket ${name}-bucket --region $region --create-bucket-configuration LocationConstraint=$region
 
 if [ $? -eq 0 ]
 then
