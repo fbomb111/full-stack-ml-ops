@@ -3,6 +3,7 @@
 name=$1
 role=$2
 
+# https://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html
 aws lambda create-function \
     --function-name ${name} \
     --runtime python3.7 \

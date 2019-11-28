@@ -91,7 +91,7 @@ else
 	$(PYTHON_INTERPRETER) -m pip install -q virtualenv virtualenvwrapper
 	@echo ">>> Installing virtualenvwrapper if not already installed.\nMake sure the following lines are in shell startup file\n\
 	export WORKON_HOME=$$HOME/.virtualenvs\nexport PROJECT_HOME=$$HOME/Devel\nsource /usr/local/bin/virtualenvwrapper.sh\n"
-	@bash -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER)"
+	@sh -c "source `which virtualenvwrapper.sh`;mkvirtualenv $(PROJECT_NAME) --python=$(PYTHON_INTERPRETER)"
 	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
 endif
 
@@ -147,7 +147,7 @@ opt/ml/input/data/processed/y_test.npy: features
 #################################################################################
 
 build_container:
-	bash scripts/build_container.sh $(DOCKER_IMAGE_NAME)
+	sh scripts/build_container.sh $(DOCKER_IMAGE_NAME)
 
 train_local: 
 ifeq ($(DOCKER_IMAGE_NAME_IS_VALID),)
@@ -166,37 +166,40 @@ predict_local:
 	opt/program/local_test/predict_local.sh $(TEST_FILE)
 
 push_container:
-	bash scripts/push_container.sh $(DOCKER_IMAGE_NAME)
+	sh scripts/aws/push_container.sh $(DOCKER_IMAGE_NAME)
 
 # EXAMPLE: make create_bucket S3_BUCKET=sagemaker-byo-mnist
 create_bucket:
 ifeq (,$(S3_BUCKET))
-	bash scripts/aws/create_s3_bucket.sh $(PROJECT_NAME) $(PROFILE)
+	sh scripts/aws/create_bucket.sh $(PROJECT_NAME) $(PROFILE)
 else
-	bash scripts/aws/create_s3_bucket.sh $(S3_BUCKET) $(PROFILE)
+	sh scripts/aws/create_bucket.sh $(S3_BUCKET) $(PROFILE)
 endif
 
 create_role:
-	bash scripts/aws/create_iam_role.sh $(PROJECT_NAME)
+	sh scripts/aws/create_iam_role.sh $(PROJECT_NAME)
 
-# pass TRAIN_ONLY=False if you don't want to deploy an endpoint
-# remember, deploying an endpoint costs $ even when you're not using it, so delete it if you don't need it
-# EXAMPLE: make train_and_deploy TRAIN_ONLY=False
-train_and_deploy:
-ifeq (False,$(TRAIN_ONLY))
-	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_and_deploy
-else
-	$(PYTHON_INTERPRETER) scripts/train_and_deploy.py $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE) --train_only
-endif
+create_training_job:
+	sh scripts/aws/create_training_job.sh $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
+
+create_model:
+	sh scripts/aws/create_model.sh $(TRAINING_JOB_NAME) 
+
+create_endpoint_config:
+	sh scripts/aws/create_endpoint_config.sh $(TRAINING_JOB_NAME) 
+
+# IMPORTANT: deploying an endpoint costs $ even when you're not using it, so delete it if you don't need it
+create_endpoint:
+	sh scripts/aws/create_endpoint.sh $(TRAINING_JOB_NAME) 
 
 create_lambda:
-	bash scripts/aws/create_lambda.sh $(PROJECT_NAME) $(IAM_ROLE)
+	sh scripts/aws/create_lambda.sh $(TRAINING_JOB_NAME) $(IAM_ROLE)
 
-#EXAMPLE: make test_lambda TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
+# EXAMPLE: make test_lambda TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
 test_lambda:
-	bash scripts/aws/invoke_lambda.sh $(PROJECT_NAME) $(TEST_FILE)
+	cd scripts/aws; sh invoke_lambda.sh $(TRAINING_JOB_NAME) $(TEST_FILE)
 
-walkoff_deploy: data features train build_container push_container train_and_deploy
+walkoff_deploy: data features train build_container push_container create_training_job
 
 #################################################################################
 # Self Documenting Commands                                                     #

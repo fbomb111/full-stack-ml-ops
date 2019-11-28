@@ -15,7 +15,7 @@ import traceback
 import flask
 import pandas as pd
 import keras
-from opt.program.src.models import predict_model
+from opt.program.src.models.predict_model import ScoringService
 
 # temporary workaround
 import keras.backend.tensorflow_backend as tb
@@ -28,37 +28,6 @@ prefix = '/' if "IS_CONTAINER" in os.environ else './'
 prefix_path = os.path.join(prefix, 'opt/ml/')
 output_path = os.path.join(prefix_path, 'output')
 model_path = os.path.join(prefix_path, 'model')
-
-# A singleton for holding the model. This simply loads the model and holds it.
-# It has a predict function that does a prediction based on the model and the input data.
-
-class ScoringService(object):
-    model = None                # Where we keep the model when it's loaded
-
-    @classmethod
-    def get_model(cls):
-        """Get the model object for this instance, loading it if it's not already loaded."""
-        if cls.model == None:
-            # with open(os.path.join(model_path, 'application-model.pkl'), 'r') as inp:
-            #     cls.model = pickle.load(inp)
-
-            # temporary workaround
-            tb._SYMBOLIC_SCOPE.value = True
-            ###
-
-            cls.model = keras.models.load_model(os.path.join(model_path, 'model.h5'))
-        
-        return cls.model
-
-    @classmethod
-    def predict(cls, input):
-        """For the input, do the predictions and return them.
-
-        Args:
-            input (a pandas dataframe): The data on which to do the predictions. There will be
-                one prediction per row in the dataframe"""
-        clf = cls.get_model()
-        return clf.predict(clf)
 
 @app.route('/index', methods=['POST'])
 def index():
@@ -82,7 +51,7 @@ def index():
     arr = np.array(im)[:,:,0:1]
 
     # returns a multi dimensional array of predictions, but for this example we assume you only want one/the first prediction
-    probs = predict_model.main(arr).tolist()[0]
+    probs = ScoringService.predictFromImage(arr).tolist()[0]
 
      # Return json data
     res['result'] = 1
@@ -112,18 +81,10 @@ def transformation():
     if flask.request.content_type == 'text/csv':
         data = flask.request.data.decode('utf-8')
         s = StringIO(data)
-        # data = pd.read_csv(s, header=None)
     else:
         return flask.Response(response='This predictor only supports CSV data', status=415, mimetype='text/plain')
 
-
-    # # print('Invoked with {} records'.format(data.shape[0]))
-
-    # # Do the prediction
-    # # predictions = ScoringService.predict(data)
-
-    # os.chdir('/opt/program')
-    predictions = predict_model.predictFromCSV(s)
+    predictions = ScoringService.predictFromCSV(s)
 
     # Convert from numpy back to CSV
     out = StringIO()

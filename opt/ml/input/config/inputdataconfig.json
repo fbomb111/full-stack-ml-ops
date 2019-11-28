@@ -4,7 +4,8 @@
         "DataSource": {
             "S3DataSource": {
                 "S3DataType": "S3Prefix",
-                "S3DataDistributionType": "FullyReplicated"
+                "S3DataDistributionType": "FullyReplicated",
+                "S3Uri": "s3://S3_BUCKET/input/processed"
             }
         },
         "ContentType": "text/csv",
@@ -15,7 +16,8 @@
         "DataSource": {
             "S3DataSource": {
                 "S3DataType": "S3Prefix",
-                "S3DataDistributionType": "FullyReplicated"
+                "S3DataDistributionType": "FullyReplicated",
+                "S3Uri": "s3://S3_BUCKET/input/external"
             }
         },
         "ContentType": "text/csv",
@@ -26,7 +28,8 @@
         "DataSource": {
             "S3DataSource": {
                 "S3DataType": "S3Prefix",
-                "S3DataDistributionType": "FullyReplicated"
+                "S3DataDistributionType": "FullyReplicated",
+                "S3Uri": "s3://S3_BUCKET/input/test"
             }
         },
         "ContentType": "text/csv",
