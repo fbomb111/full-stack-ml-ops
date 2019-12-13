@@ -1,9 +1,7 @@
 # project dependencies
 pandas
 numpy
-keras
-tensorflow
-pillow
+sklearn
 
 # application dependencies
 flask 

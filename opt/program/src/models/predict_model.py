@@ -38,18 +38,18 @@ class ScoringService(object):
             input (a pandas dataframe): The data on which to do the predictions. There will be
                 one prediction per row in the dataframe"""
         model = cls.get_model()
-        X_test = cls.reshapeAndNormalizeXValues(input)
-        y_test = model.predict(X_test)
+        # X_test = cls.reshapeAndNormalizeXValues(input)
+        y_test = model.predict(input)
         return y_test
 
-    @classmethod
-    def reshapeAndNormalizeXValues(cls, array):
-        # channels first or last?
-        # print(array)
-        array = array.reshape(array.shape[0], 28, 28, 1)
-        array = array.astype( 'float32' )
-        array = array / 255.0
-        return array
+    # @classmethod
+    # def reshapeAndNormalizeXValues(cls, array):
+    #     # channels first or last?
+    #     # print(array)
+    #     array = array.reshape(array.shape[0], 28, 28, 1)
+    #     array = array.astype( 'float32' )
+    #     array = array / 255.0
+    #     return array
 
     @classmethod
     def predictFromImage(cls, image):

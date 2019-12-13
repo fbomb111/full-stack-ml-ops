@@ -1,10 +1,4 @@
-import keras
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import Flatten
-from keras.layers.convolutional import Conv2D
-from keras.layers.convolutional import MaxPooling2D
+from sklearn import tree
 import numpy as np
 import os
 
@@ -13,28 +7,15 @@ data_path = os.path.join(prefix, 'opt/ml/input/data')
 train_path = os.path.join(data_path, 'processed')
 
 def main():
-    model=Sequential()
+    pd.read_csv(os.path.join(train_path, 'iris.csv'))
 
-    model.add(Conv2D(32,3, activation='relu'))
-    model.add(Conv2D(32,3, activation='relu'))
-    model.add(MaxPooling2D(pool_size=2))
+    # labels are in the first column
+    train_y = train_data.ix[:,0]
+    train_X = train_data.ix[:,1:]
 
-    model.add(Conv2D(64,3, activation='relu'))
-    model.add(Conv2D(64,3, activation='relu'))
-    model.add(MaxPooling2D(pool_size=2))
-
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(10, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
-
-    X_train = np.load(os.path.join(train_path, 'X_train.npy'))
-    y_train = np.load(os.path.join(train_path, 'y_train.npy'))
-
-    model.fit(X_train, y_train,
-            epochs=1,
-            batch_size=128,
-            verbose=True)
+    # Now use scikit-learn's decision tree classifier to train the model.
+    model = tree.DecisionTreeClassifier(max_leaf_nodes=10)
+    model = model.fit(train_X, train_y)
 
     return model 
 
