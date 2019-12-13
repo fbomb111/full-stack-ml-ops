@@ -125,20 +125,37 @@ If you already have an IAM role ready for use with SageMaker, get the ARN of the
 **OR** - Read the docs to [get started with creating your own role here:](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html)
 
 
-### Training & Deploying the Model & Endpoint With Sagemaker
+### Creating a Training Job With SageMaker
 
 By this point you should have:
 1) An IAM Role
 2) A S3 bucket
 3) A docker image in AWS ECR
 
-For optional advanced customization you can tune hyperparameters and input data channels at `scripts/train_and_deploy.py`
+For optional advanced customization you can tune hyperparameters and input data channels at `opt/ml/input/config/hyperparameters.json`
 
-**Note:** Both training and deploying the endpoint cost $ unless you use free tier resources.  For training, you will only be billed to the closest second for the actual time needed to train.  However, for deploying the endpoint, you will be billed as long as the endpoint is available, even if you're not using it.  Therefore, the default below is to train only.
+**Note:** Training costs $ unless you use free tier resources.  However, you will only be billed to the closest second for the actual time needed to train.  Billing will end as soon as training is completed.
 
-Create and train the model with Sagemaker by running `make train_and_deploy`.  If you'd like to also deploy an endpoint, run `make train_and_deploy TRAIN_ONLY=False` instead
+Run `make create_training_job` to train your model.
 
 When complete, you'll find your model in S3 at `<your-bucket>/output/<training-job-name>/output/model.tar.gz`
+
+
+### Creating a Model with SageMaker
+
+Run `make create_model`
+
+
+### Creating an Endpoint Configuration with SageMaker
+
+Run `make create_endpoint_config`
+
+
+### Creating an Endpoint with SageMaker
+
+Run `make create_endpoint`
+
+**Note:** Deploying an endpoint costs $ unless you use free tier resources.  Because the endpoints needs to stay available on a running EC2, you will continue to be billed even if not using the endpoint.  To prevent further charges, you must delete the endpoint.
 
 
 ### Using Lambda to Access Your Endpoint

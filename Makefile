@@ -179,6 +179,7 @@ endif
 create_role:
 	sh scripts/aws/create_iam_role.sh $(PROJECT_NAME)
 
+# IMPORTANT: creating a training job costs $, though billing will automatically stop as soon as training is complete.
 create_training_job:
 	sh scripts/aws/create_training_job.sh $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
 
@@ -197,7 +198,7 @@ create_lambda:
 
 # EXAMPLE: make test_lambda TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
 test_lambda:
-	cd scripts/aws; sh invoke_lambda.sh $(TRAINING_JOB_NAME) $(TEST_FILE)
+	sh scripts/aws/invoke_lambda.sh $(TRAINING_JOB_NAME) $(TEST_FILE)
 
 walkoff_deploy: data features train build_container push_container create_training_job
 
