@@ -51,10 +51,10 @@ clean:
 
 # Delete all output files (data, models, kaggle csv)
 purge:
-	find opt/ml/output -type f -delete
-	find opt/ml/model -type f -delete
-	find opt/ml/input/data/external -type f -delete
-	find opt/ml/input/data/processed -type f -delete
+	find opt/ml/output -not -path '*/\.*' -type f -delete
+	find opt/ml/model -not -path '*/\.*' -type f -delete
+	find opt/ml/input/data/external -not -path '*/\.*' -type f -delete
+	find opt/ml/input/data/processed -not -path '*/\.*' -type f -delete
 
 ## Lint using flake8
 lint:
