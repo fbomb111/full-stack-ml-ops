@@ -1,5 +1,6 @@
 from sklearn import tree
 import numpy as np
+import pandas as pd
 import os
 
 prefix = '/' if "IS_CONTAINER" in os.environ else './'
@@ -7,7 +8,7 @@ data_path = os.path.join(prefix, 'opt/ml/input/data')
 train_path = os.path.join(data_path, 'processed')
 
 def main():
-    pd.read_csv(os.path.join(train_path, 'iris.csv'))
+    train_data = pd.read_csv(os.path.join(train_path, 'iris.csv'))
 
     # labels are in the first column
     train_y = train_data.ix[:,0]
