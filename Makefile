@@ -125,10 +125,10 @@ grade: opt/ml/input/data/processed/submission.csv
 	@echo "Configuration error. Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-api#api-credentials"; exit 1;
 
 opt/ml/input/data/external/train.csv: ~/.kaggle/kaggle.json
-	kaggle competitions download -c digit-recognizer -f train.csv --unzip -p opt/ml/input/data/external --force
+	kaggle competitions download -c digit-recognizer -f train.csv -p opt/ml/input/data/external --force
 
 opt/ml/input/data/external/test.csv: ~/.kaggle/kaggle.json
-	kaggle competitions download -c digit-recognizer -f test.csv --unzip  -p opt/ml/input/data/external --force
+	kaggle competitions download -c digit-recognizer -f test.csv -p opt/ml/input/data/external --force
 
 opt/ml/model/model.h5: train
 
