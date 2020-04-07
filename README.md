@@ -15,8 +15,12 @@ export PROJECT_NAME = ml-foo
 export PROFILE = default
 ```
 
-Then run `make environment`.  Activate your environment.
-I can be certain this works if you use `conda` and `python3`.  Though the project supports `python2` and `pip`.
+If you don't have docker setup and installed on your machine, do so now.  [Get started here with Docker.](https://docs.docker.com/get-docker/)
+
+I can be certain this works if you use `conda` and `python3`.  Though the project should support `python2` and `pip`.
+[Get started here with Anaconda](https://docs.anaconda.com/anaconda/install/)
+
+Then run `make environment`.  Then activate your environment.
 
 
 ### Dependencies
@@ -26,6 +30,12 @@ Workflow project dependencies live in `requirements.txt`
 Dependencies to be containerized with the ML application live in `opt/program/requirements.txt`
 
 Run `make requirements` to install them all locally into your enviroment.
+
+**At this time 4/7/20 you can safely ignore the following error messages**
+```
+ERROR: botocore 1.15.38 has requirement docutils<0.16,>=0.10, but you'll have docutils 0.16 which is incompatible.
+ERROR: awscli 1.18.38 has requirement docutils<0.16,>=0.10, but you'll have docutils 0.16 which is incompatible.
+```
 
 
 ### Data
@@ -37,6 +47,8 @@ Please review the Kaggle setup instructions at https://github.com/Kaggle/kaggle-
 Once you've completed this run `make data`
 
 Then you'll be able to find your data at `opt/ml/input/data/external`
+
+**At this time 4/7/20 the data downloads as a zip file and you must manually unzip the folders yourself before moving on to the next step.**
 
 
 ### Features
@@ -52,7 +64,7 @@ Your output will be in `opt/ml/input/data/processed`
 
 Build your model in `opt/program/src/models/build_model.py`
 
-Train it by running `make train`
+Train it by running `make train`. If you run this 'as-is' the default is set to run for only 1 epoch.
 
 Your output will be in `opt/ml/model`
 
@@ -63,26 +75,38 @@ Put your inference logic in `opt/program/src/models/predict_model.py`
 
 Get your predictions by running `make predict METHOD=<method-parameter> TEST_FILE=<local-file-location>`
 
-For example: `make predict METHOD=kaggle TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`.
+For example: `make predict METHOD=csv TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`.  
+You should see the output [2 0 9] which are the three predictions for each row in the mnist_sample.csv test file.
 
 For convenience, you can keep your test files in `opt/ml/input/data/test`
 
 There are 3 methods to choose for local inference:
 - `kaggle` - will produce a csv file at `opt/program/output/submission.csv` in kaggle submission format
 - `csv` - get multiple inferences from a csv file
-- `image` - get an inference by supplying an actual image (in progress)
+- `image` - get an inference by supplying an actual image (**not current working!**)
 
 
 ### Building the Container's Image
 
 To containerize your model project run `make build_container`
+This will run the steps found in the Dockerfile which includes setting up dependencies and environment variables.
 
+**At this time 4/7/20 you should be able to ignore the following error messages**
+```
+Successfully built pyyaml absl-py gast wrapt termcolor
+ERROR: google-auth 1.13.1 has requirement setuptools>=40.3.0, but you'll have setuptools 39.0.1 which is incompatible.
+ERROR: tensorboard 2.1.1 has requirement setuptools>=41.0.0, but you'll have setuptools 39.0.1 which is incompatible.
+ERROR: tensorflow 2.1.0 has requirement six>=1.12.0, but you'll have six 1.11.0 which is incompatible.
+```
 
 ### Locally Testing the Container
 
 1. First, test that your container can train by running `make train_local`
 2. Second, to serve the container locally run `make serve_local`
+- Assuming you've done all this in a terminal window, you'll want to open a new terminal tab/window to the same directory and input the next command.
 3. Last, make an inference to the container by running `make predict_local TEST_FILE=<local-file-location>`
+- i.e. `make predict_local TEST_FILE=opt/ml/input/data/test/mnist_sample.csv`.
+4. It's safe to stop your container now.
 
 
 ### Getting Started with the AWS CLI
@@ -96,7 +120,12 @@ You'll need to [install the AWS CLI](https://docs.aws.amazon.com/cli/latest/user
 
 ### Deploying the Container's Image
 
-After succesfully testing your container, deploy it to AWS's ECR by running `make push_container`
+After succesfully testing your container, before deploying, you can clear out all the assets you created while testing by running `make purge`.  
+This will delete your docker image and all your data assets.  Then run `make build_container` so you can push a lighter weight version.
+Deploy it to AWS's ECR by running `make push_container`.
+
+**I don't know why these images are enormous.  Plan on this taking a substantial amount of time to push the container to ECR until I can fix this**
+
 
 
 ### Data in the Cloud
