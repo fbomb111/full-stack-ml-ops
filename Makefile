@@ -39,7 +39,7 @@ requirements: test_environment
 	# install application dependencies
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt	
 	# install project dependencies
-	$(PYTHON_INTERPRETER) -m pip install -r container/requirements.txt	
+	$(PYTHON_INTERPRETER) -m pip install -r opt/program/requirements.txt	
 
 ## Make Dataset
 data: opt/ml/input/data/external/train.csv opt/ml/input/data/external/test.csv
@@ -51,10 +51,10 @@ clean:
 
 # Delete all output files (data, models, kaggle csv)
 purge:
-	find opt/ml/output -type f -delete
-	find opt/ml/model -type f -delete
-	find opt/ml/input/data/external -type f -delete
-	find opt/ml/input/data/processed -type f -delete
+	find opt/ml/output -not -path '*/\.*' -type f -delete
+	find opt/ml/model -not -path '*/\.*' -type f -delete
+	find opt/ml/input/data/external -not -path '*/\.*' -type f -delete
+	find opt/ml/input/data/processed -not -path '*/\.*' -type f -delete
 
 ## Lint using flake8
 lint:
@@ -179,6 +179,7 @@ endif
 create_role:
 	sh scripts/aws/create_iam_role.sh $(PROJECT_NAME)
 
+# IMPORTANT: creating a training job costs $, though billing will automatically stop as soon as training is complete.
 create_training_job:
 	sh scripts/aws/create_training_job.sh $(DOCKER_IMAGE_NAME) $(S3_BUCKET) $(IAM_ROLE)
 
@@ -197,7 +198,7 @@ create_lambda:
 
 # EXAMPLE: make test_lambda TEST_FILE=opt/ml/input/data/test/mnist_sample.csv
 test_lambda:
-	cd scripts/aws; sh invoke_lambda.sh $(TRAINING_JOB_NAME) $(TEST_FILE)
+	sh scripts/aws/invoke_lambda.sh $(TRAINING_JOB_NAME) $(TEST_FILE)
 
 # create_api:
 # 	sh scripts/aws/create_api.sh $(TRAINING_JOB_NAME)

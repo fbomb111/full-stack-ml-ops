@@ -45,7 +45,7 @@ class ScoringService(object):
     @classmethod
     def reshapeAndNormalizeXValues(cls, array):
         # channels first or last?
-        print(array)
+        # print(array)
         array = array.reshape(array.shape[0], 28, 28, 1)
         array = array.astype( 'float32' )
         array = array / 255.0
