@@ -199,6 +199,9 @@ create_lambda:
 test_lambda:
 	cd scripts/aws; sh invoke_lambda.sh $(TRAINING_JOB_NAME) $(TEST_FILE)
 
+# create_api:
+# 	sh scripts/aws/create_api.sh $(TRAINING_JOB_NAME)
+
 walkoff_deploy: data features train build_container push_container create_training_job
 
 #################################################################################
